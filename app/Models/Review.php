@@ -12,9 +12,9 @@ class Review extends Model
     use HasFactory, HasUuids;
 
     // belongsTo product
-    public function product()
+    public function productVariant()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 
     // belongsTo user

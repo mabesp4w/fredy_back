@@ -28,11 +28,11 @@ class ProductImageController extends Controller
             $required = "required";
         }
         $rules = [
-            'productImage_nm' => 'required',
+            'position' => 'required',
         ];
 
         $messages = [
-            'productImage_nm.required' => 'Nama ProductImage harus diisi.',
+            'position.required' => 'Nama ProductImage harus diisi.',
         ];
         $validator = Validator::make($request, $rules, $messages);
 
@@ -53,10 +53,15 @@ class ProductImageController extends Controller
         $search = $request->search;
         $sortby = $request->sortby;
         $order = $request->order;
-        $data = ProductImage::where(function ($query) use ($search) {
-            $query->where('productImage_nm', 'like', "%$search%");
-        })
-            ->orderBy($sortby ?? 'productImage_nm', $order ?? 'asc')
+        $product_variant_id = $request->product_variant_id;
+        $data = ProductImage::with('productVariant')
+            ->where(function ($query) use ($search) {
+                $query->where('position', 'like', "%$search%");
+            })
+            ->where(function ($query) use ($product_variant_id) {
+                $query->where('product_variant_id', $product_variant_id);
+            })
+            ->orderBy($sortby ?? 'position', $order ?? 'asc')
             ->paginate(10);
         return new CrudResource('success', 'Data ProductImage', $data);
     }
@@ -98,13 +103,14 @@ class ProductImageController extends Controller
                     // Buat entri baru di ProductImage untuk setiap gambar
                     ProductImage::create([
                         'position' => $data_req['position'],
-                        'product_id' => $data_req['product_id'],
+                        'product_variant_id' => $data_req['product_variant_id'],
                         'product_img' => "storage/$product_img",
                     ]);
                 }
             }
             // get last data
-            $data = ProductImage::where('product_id', $data_req['product_id'])->latest()->get();
+            $data = ProductImage::with('productVariant')
+                ->where('product_variant_id', $data_req['product_variant_id'])->latest()->get();
             // add options
             DB::commit();
             return new CrudResource('success', 'Data Berhasil Disimpan', $data);
@@ -151,7 +157,8 @@ class ProductImageController extends Controller
         unset($data_req['_method']);
         DB::beginTransaction();
         try {
-            $productImage = ProductImage::findOrFail($id);
+            $productImage = ProductImage::with('productVariant')
+                ->findOrFail($id);
             // find file product_img
             $product_img = $productImage->product_img;
             // export product_img

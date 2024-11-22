@@ -11,9 +11,9 @@ class ProductImage extends Model
     /** @use HasFactory<\Database\Factories\ProductImageFactory> */
     use HasFactory, HasUuids;
 
-    // belongsTo product
-    public function product()
+    // belongsTo productVariant
+    public function productVariant()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 }

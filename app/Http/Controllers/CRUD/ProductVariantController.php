@@ -43,9 +43,13 @@ class ProductVariantController extends Controller
         $search = $request->search;
         $sortby = $request->sortby;
         $order = $request->order;
+        $product_id = $request->product_id;
         $data = ProductVariant::with('product')
             ->where(function ($query) use ($search) {
                 $query->where('variant_nm', 'like', "%$search%");
+            })
+            ->where(function ($query) use ($product_id) {
+                $query->where('product_id', $product_id);
             })
             ->orderBy($sortby ?? 'variant_nm', $order ?? 'asc')
             ->paginate(10);
@@ -84,7 +88,9 @@ class ProductVariantController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $data = ProductVariant::with('product')
+            ->find($id);
+        return new CrudResource('success', 'Data ProductVariant', $data);
     }
 
     /**

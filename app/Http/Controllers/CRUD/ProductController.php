@@ -84,7 +84,9 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $data = Product::with('category')
+            ->find($id);
+        return new CrudResource('success', 'Data Product', $data);
     }
 
     /**
