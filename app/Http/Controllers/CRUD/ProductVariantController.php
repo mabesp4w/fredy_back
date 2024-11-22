@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\CRUD;
 
-use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CrudResource;
 use Illuminate\Support\Facades\Validator;
 
-class ProductController extends Controller
+class ProductVariantController extends Controller
 {
     protected function spartaValidation($request, $id = "")
     {
@@ -17,11 +17,11 @@ class ProductController extends Controller
             $required = "required";
         }
         $rules = [
-            'product_nm' => 'required',
+            'variant_nm' => 'required',
         ];
 
         $messages = [
-            'product_nm.required' => 'Nama Product harus diisi.',
+            'variant_nm.required' => 'Nama ProductVariant harus diisi.',
         ];
 
         $validator = Validator::make($request, $rules, $messages);
@@ -43,13 +43,13 @@ class ProductController extends Controller
         $search = $request->search;
         $sortby = $request->sortby;
         $order = $request->order;
-        $data = Product::with('category')
+        $data = ProductVariant::with('product')
             ->where(function ($query) use ($search) {
-                $query->where('product_nm', 'like', "%$search%");
+                $query->where('variant_nm', 'like', "%$search%");
             })
-            ->orderBy($sortby ?? 'product_nm', $order ?? 'asc')
+            ->orderBy($sortby ?? 'variant_nm', $order ?? 'asc')
             ->paginate(10);
-        return new CrudResource('success', 'Data Product', $data);
+        return new CrudResource('success', 'Data ProductVariant', $data);
     }
 
     /**
@@ -71,9 +71,9 @@ class ProductController extends Controller
         if ($validate) {
             return $validate;
         }
-        Product::create($data_req);
+        ProductVariant::create($data_req);
 
-        $data = Product::with('category')
+        $data = ProductVariant::with('product')
             ->latest()->first();
 
         return new CrudResource('success', 'Data Berhasil Disimpan', $data);
@@ -107,9 +107,9 @@ class ProductController extends Controller
             return $validate;
         }
 
-        Product::find($id)->update($data_req);
+        ProductVariant::find($id)->update($data_req);
 
-        $data = Product::with('category')
+        $data = ProductVariant::with('product')
             ->find($id);
 
         return new CrudResource('success', 'Data Berhasil Diubah', $data);
@@ -120,7 +120,7 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Product::findOrFail($id);
+        $data = ProductVariant::findOrFail($id);
         // delete data
         $data->delete();
 
