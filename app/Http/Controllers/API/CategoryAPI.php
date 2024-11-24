@@ -32,4 +32,11 @@ class CategoryAPI extends Controller
         $data = Category::get();
         return new CrudResource('success', 'Data Category', $data);
     }
+
+    // detail category
+    public function detail($id)
+    {
+        $data = Category::find($id);
+        return new CrudResource('success', 'Data Category', $data);
+    }
 }

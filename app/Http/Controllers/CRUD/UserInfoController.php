@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\CRUD;
 
-use App\Models\ProductVariant;
+use App\Models\UserInfo;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CrudResource;
 use Illuminate\Support\Facades\Validator;
 
-class ProductVariantController extends Controller
+class UserInfoController extends Controller
 {
     protected function spartaValidation($request, $id = "")
     {
@@ -17,13 +17,12 @@ class ProductVariantController extends Controller
             $required = "required";
         }
         $rules = [
-            'variant_nm' => 'required',
+            'nm_user' => 'required',
         ];
 
         $messages = [
-            'variant_nm.required' => 'Nama ProductVariant harus diisi.',
+            'nm_user.required' => 'Nama Kategori harus diisi.',
         ];
-
         $validator = Validator::make($request, $rules, $messages);
 
         if ($validator->fails()) {
@@ -43,17 +42,12 @@ class ProductVariantController extends Controller
         $search = $request->search;
         $sortby = $request->sortby;
         $order = $request->order;
-        $product_id = $request->product_id;
-        $data = ProductVariant::with('product')
-            ->where(function ($query) use ($search) {
-                $query->where('variant_nm', 'like', "%$search%");
-            })
-            ->where(function ($query) use ($product_id) {
-                $query->where('product_id', $product_id);
-            })
-            ->orderBy($sortby ?? 'variant_nm', $order ?? 'asc')
+        $data = UserInfo::where(function ($query) use ($search) {
+            $query->where('nm_user', 'like', "%$search%");
+        })
+            ->orderBy($sortby ?? 'nm_user', $order ?? 'asc')
             ->paginate(10);
-        return new CrudResource('success', 'Data ProductVariant', $data);
+        return new CrudResource('success', 'Data UserInfo', $data);
     }
 
     /**
@@ -75,10 +69,9 @@ class ProductVariantController extends Controller
         if ($validate) {
             return $validate;
         }
-        ProductVariant::create($data_req);
+        UserInfo::create($data_req);
 
-        $data = ProductVariant::with('product')
-            ->latest()->first();
+        $data = UserInfo::latest()->first();
 
         return new CrudResource('success', 'Data Berhasil Disimpan', $data);
     }
@@ -88,9 +81,7 @@ class ProductVariantController extends Controller
      */
     public function show(string $id)
     {
-        $data = ProductVariant::with('product')
-            ->find($id);
-        return new CrudResource('success', 'Data ProductVariant', $data);
+        //
     }
 
     /**
@@ -113,10 +104,9 @@ class ProductVariantController extends Controller
             return $validate;
         }
 
-        ProductVariant::find($id)->update($data_req);
+        UserInfo::find($id)->update($data_req);
 
-        $data = ProductVariant::with('product')
-            ->find($id);
+        $data = UserInfo::find($id);
 
         return new CrudResource('success', 'Data Berhasil Diubah', $data);
     }
@@ -126,7 +116,7 @@ class ProductVariantController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = ProductVariant::findOrFail($id);
+        $data = UserInfo::findOrFail($id);
         // delete data
         $data->delete();
 

@@ -34,21 +34,35 @@ class ProdukAPI extends Controller
         $search = $request->search;
         $sortby = $request->sortby;
         $order = $request->order;
+        $limit = $request->limit ?? 10;
 
-        $products = ProductVariant::whereHas('product', function ($query) use ($category_id) {
-            $query->where('category_id', $category_id);
-        })
-            ->with(['product.category', 'productImage', 'review.user'])
-            ->orderBy($sortby ?? 'created_at', $order ?? 'desc')
-            ->where('product_nm', 'like', "%$search%")
-            ->paginate(12);
+        $products = Product::with(['category', 'productVariants.productVariantImages'])
+            ->where('category_id', $category_id)
+            ->whereExists(function ($query) {  // Hapus type hint dari sini
+                $query->select(DB::raw(1))
+                    ->from('product_variants')
+                    ->whereColumn('product_variants.product_id', 'products.id');
+            })
+            ->where(function ($query) use ($search) {
+                $query->where('product_nm', 'like', "%$search%")
+                    ->orWhereHas('productVariants', function ($query) use ($search) {
+                        $query->where('variant_nm', 'like', "%$search%");
+                    });
+            })
+            ->orderBy($sortby ?? 'product_nm', $order ?? 'asc')
+            ->paginate($limit);
 
         return new CrudResource('success', 'Data Product', $products);
     }
 
     function detail($id)
     {
-        $product = Product::with(['category', 'productVariants.productImage', 'productVariants.review.user', 'productVariants.orderItem.order'])
+        $product = Product::with(['category', 'productVariants.productVariantImages', 'productVariants.review.user', 'productVariants.orderItem.order'])
+            ->whereExists(function ($query) {  // Hapus type hint dari sini
+                $query->select(DB::raw(1))
+                    ->from('product_variants')
+                    ->whereColumn('product_variants.product_id', 'products.id');
+            })
             ->find($id);
 
         return new CrudResource('success', 'Data Product', $product);
