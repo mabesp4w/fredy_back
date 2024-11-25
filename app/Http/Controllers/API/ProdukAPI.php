@@ -81,22 +81,15 @@ class ProdukAPI extends Controller
             ->take(8)->get();
         // bestSeller
         $bestSellers = Product::with(['category', 'productVariants.productVariantImages'])
-            ->whereExists(function ($query) {
+            ->whereExists(function ($query) {  // Hapus type hint dari sini
                 $query->select(DB::raw(1))
                     ->from('product_variants')
                     ->whereColumn('product_variants.product_id', 'products.id');
             })
             ->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
             ->leftJoin('order_items', 'product_variants.id', '=', 'order_items.product_variant_id')
-            ->select([
-                'products.id',
-                'products.name',
-                'products.category_id',
-                'products.created_at',
-                'products.updated_at',
-                DB::raw('COALESCE(SUM(order_items.quantity), 0) as total_ordered')
-            ])
-            ->groupBy('products.id', 'products.name', 'products.category_id', 'products.created_at', 'products.updated_at')
+            ->select('products.*', DB::raw('COALESCE(SUM(order_items.quantity), 0) as total_ordered'))
+            ->groupBy('products.id')
             ->orderByDesc('total_ordered')
             ->take(8)
             ->get();
