@@ -11,5 +11,6 @@ Route::resources([
     'variants' => App\Http\Controllers\CRUD\ProductVariantController::class,
     'productImages' => App\Http\Controllers\CRUD\ProductImageController::class,
     'userInfos' => App\Http\Controllers\CRUD\UserInfoController::class,
-    'orders' => App\Http\Controllers\CRUD\OrderController::class
+    'orders' => App\Http\Controllers\CRUD\OrderController::class,
+    'reviews' => App\Http\Controllers\CRUD\ReviewController::class
 ]);

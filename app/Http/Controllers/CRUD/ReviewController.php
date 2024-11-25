@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\CRUD;
 
-use App\Models\Cart;
 use App\Models\Order;
+use App\Models\Review;
 use Illuminate\Http\Request;
-use App\Models\ShippingStatus;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CrudResource;
 use Illuminate\Support\Facades\Validator;
 
-class OrderController extends Controller
+class ReviewController extends Controller
 {
     protected function spartaValidation($request, $id = "")
     {
@@ -20,11 +19,11 @@ class OrderController extends Controller
             $required = "required";
         }
         $rules = [
-            'status' => 'required',
+            'comment' => 'required',
         ];
 
         $messages = [
-            'status.required' => 'Nama Order harus diisi.',
+            'comment.required' => 'Nama Kategori harus diisi.',
         ];
         $validator = Validator::make($request, $rules, $messages);
 
@@ -45,29 +44,12 @@ class OrderController extends Controller
         $search = $request->search;
         $sortby = $request->sortby;
         $order = $request->order;
-        $status = explode(',', $request->status);
-
-        $orders = Order::with([
-            'user.userInfo',
-            'orderItems.productVariant.productVariantImages',
-            'shippingCost.subDistrict',
-            'review',
-            'orderItems.productVariant.product',
-            "shippingStatus",
-            "review"
-        ])
-            ->where(function ($query) use ($search) {
-                $query->where('status', 'like', "%$search%");
-            })
-            ->when($sortby, function ($query) use ($sortby, $order) {
-                $query->orderBy($sortby, $order ?? 'asc');
-            })
-            ->when($status, function ($query) use ($status) {
-                $query->whereIn('status', $status);
-            })
-            ->get();
-
-        return new CrudResource('success', 'Data Order', $orders);
+        $data = Review::where(function ($query) use ($search) {
+            $query->where('comment', 'like', "%$search%");
+        })
+            ->orderBy($sortby ?? 'comment', $order ?? 'asc')
+            ->paginate(10);
+        return new CrudResource('success', 'Data Review', $data);
     }
 
     /**
@@ -90,19 +72,23 @@ class OrderController extends Controller
             return $validate;
         }
 
+        // return $data_req;
+
         DB::beginTransaction();
         try {
-            $order = Order::create($request->only(['user_id', 'shipping_cost_id', 'total_price', 'total_payment', 'status', 'address', 'shipping_cost']));
-
-            foreach ($request->carts as $item) {
-                // escape product
-                unset($item['product_variant'], $item['created_at'], $item['updated_at']);
-                $order->orderItems()->create($item);
-                // delete cart
+            foreach ($request->product_variant_id as $key => $item) {
+                Review::create([
+                    'user_id' => $data_req['user_id'],
+                    'product_variant_id' => $item,
+                    'order_id' => $data_req['order_id'],
+                    'rating' => $data_req['rating'][$key],
+                    'comment' => $data_req['comment'][$key],
+                ]);
             }
-            Cart::where('user_id', $request->user_id)->delete();
+            // update order
+            $data = Order::where('id', $data_req['order_id'])->update(['status' => 'selesai']);
             DB::commit();
-            return new CrudResource('success', 'Data Berhasil Disimpan', $order->load('orderItems'));
+            return new CrudResource('success', 'Data Berhasil Disimpan', $data);
         } catch (\Throwable $th) {
             DB::rollBack();
             // error
@@ -138,12 +124,11 @@ class OrderController extends Controller
             return $validate;
         }
 
-        ShippingStatus::find($id)->update([
-            'status' => $data_req['status'],
-        ]);
+        Review::find($id)->update($data_req);
 
+        $data = Review::find($id);
 
-        return new CrudResource('success', 'Data Berhasil Diubah', []);
+        return new CrudResource('success', 'Data Berhasil Diubah', $data);
     }
 
     /**
@@ -151,7 +136,7 @@ class OrderController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Order::findOrFail($id);
+        $data = Review::findOrFail($id);
         // delete data
         $data->delete();
 

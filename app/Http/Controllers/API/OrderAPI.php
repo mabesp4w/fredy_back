@@ -16,7 +16,14 @@ class OrderAPI extends Controller
     {
         $user_id = $request->user_id;
         $status = $request->status;
-        $orders = Order::with(['orderItems.productVariant.productVariantImages', 'orderItems.productVariant.product',  'user.userInfo', 'shippingCost', "shippingStatus"])
+        $orders = Order::with([
+            'orderItems.productVariant.productVariantImages',
+            'orderItems.productVariant.product',
+            'user.userInfo',
+            'shippingCost',
+            "shippingStatus",
+            "review"
+        ])
             ->where('user_id', $user_id)
             ->when($status, function ($query) use ($status) {
                 $query->where('status', $status)
