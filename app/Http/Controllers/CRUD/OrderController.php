@@ -47,7 +47,14 @@ class OrderController extends Controller
         $order = $request->order;
         $status = explode(',', $request->status);
 
-        $orders = Order::with(['user.userInfo', 'orderItems.product.productImage', 'shippingCost.village.subDistrict', 'review', 'shippingStatus'])
+        $orders = Order::with([
+            'user.userInfo',
+            'orderItems.productVariant.productVariantImages',
+            'shippingCost.subDistrict',
+            'review',
+            'orderItems.productVariant.product',
+            "shippingStatus"
+        ])
             ->where(function ($query) use ($search) {
                 $query->where('status', 'like', "%$search%");
             })

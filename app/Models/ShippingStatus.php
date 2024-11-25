@@ -8,6 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShippingStatus extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShippingStatusFactory> */
     use HasFactory, HasUuids;
 }
