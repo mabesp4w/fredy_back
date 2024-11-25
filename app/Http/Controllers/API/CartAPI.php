@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\CRUD;
+namespace App\Http\Controllers\API;
 
 use App\Models\Cart;
 use Illuminate\Http\Request;
@@ -8,30 +8,34 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CrudResource;
 use Illuminate\Support\Facades\Auth;
 
-class CartController extends Controller
+class CartAPI extends Controller
 {
-    public function getCartData()
+    public function getCartData(Request $request)
     {
-        if (Auth::check()) {
-            // Pengguna sudah login, ambil data cart dari database
-            $cartItems = Cart::where('user_id', Auth::id())->get();
-        } else {
-            // Pengguna belum login, ambil data cart dari sesi
-            $cartItems = collect(session()->get('cart', []))->map(function ($item, $productId) {
-                // Ubah format jika diperlukan
-                return [
-                    'product_id' => $productId,
-                    'quantity' => $item['quantity']
-                ];
-            });
-        }
+        $userId = $request->input('user_id');
+        $cartItems = Cart::where('user_id', $userId)
+            ->with(['productVariant.product', 'productVariant.productVariantImages'])
+            ->get();
+        // if (Auth::check()) {
+        //     // Pengguna sudah login, ambil data cart dari database
+        //     $cartItems = Cart::where('user_id', $userId)->get();
+        // } else {
+        //     // Pengguna belum login, ambil data cart dari sesi
+        //     $cartItems = collect(session()->get('cart', []))->map(function ($item, $productId) {
+        //         // Ubah format jika diperlukan
+        //         return [
+        //             'product_variant_id' => $productId,
+        //             'quantity' => $item['quantity']
+        //         ];
+        //     });
+        // }
 
         return new CrudResource('success', 'Data Category', $cartItems);
     }
     // Menyimpan Cart di Sesi saat Belum Login
     public function addToCartSession(Request $request)
     {
-        $productId = $request->input('product_id');
+        $productId = $request->input('product_variant_id');
         $quantity = $request->input('quantity', 1);
 
         $cart = session()->get('cart', []);
@@ -40,7 +44,7 @@ class CartController extends Controller
             $cart[$productId]['quantity'] += $quantity;
         } else {
             $cart[$productId] = [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => $quantity,
             ];
         }
@@ -51,12 +55,12 @@ class CartController extends Controller
     // Menghapus Item dari Cart di Sesi
     public function removeFromCartSession(Request $request)
     {
-        $productId = $request->input('product_id');
+        $productId = $request->input('product_variant_id');
 
         $cart = session()->get('cart', []);
 
         if (isset($cart[$productId])) {
-            unset($cart[$productId]); // Hapus item berdasarkan product_id
+            unset($cart[$productId]); // Hapus item berdasarkan product_variant_id
             session()->put('cart', $cart); // Perbarui session
             return response()->json(['message' => 'Item removed from session cart']);
         }
@@ -65,15 +69,15 @@ class CartController extends Controller
     }
 
     // Menyalin Isi Sesi ke Tabel Cart Saat Login
-    public function copySessionCartToDatabase()
+    public function copySessionCartToDatabase(Request $request)
     {
         $cart = session()->get('cart', []);
-
+        $userId = $request->input('user_id');
         foreach ($cart as $productId => $item) {
             Cart::updateOrCreate(
                 [
-                    'user_id' => Auth::id(),
-                    'product_id' => $productId
+                    'user_id' => $userId,
+                    'product_variant_id' => $productId
                 ],
                 [
                     'quantity' => $item['quantity']
@@ -86,12 +90,13 @@ class CartController extends Controller
     // Menyimpan Cart di Tabel Jika Sudah Login
     public function addToCartDatabase(Request $request)
     {
-        $productId = $request->input('product_id');
+        $productId = $request->input('product_variant_id');
         $quantity = $request->input('quantity', 1);
+        $userId = $request->input('user_id');
 
         // Cek apakah item sudah ada di cart
-        $cartItem = Cart::where('user_id', Auth::id())
-            ->where('product_id', $productId)
+        $cartItem = Cart::where('user_id', $userId)
+            ->where('product_variant_id', $productId)
             ->first();
 
         if ($cartItem) {
@@ -100,8 +105,8 @@ class CartController extends Controller
         } else {
             // Jika belum ada, buat baru dengan quantity
             Cart::create([
-                'user_id' => Auth::id(),
-                'product_id' => $productId,
+                'user_id' => $userId,
+                'product_variant_id' => $productId,
                 'quantity' => $quantity
             ]);
         }
@@ -111,12 +116,12 @@ class CartController extends Controller
 
     public function setCartQuantity(Request $request)
     {
-        $productId = $request->input('product_id');
+        $productId = $request->input('product_variant_id');
         $newQuantity = $request->input('quantity');
-
+        $userId = $request->input('user_id');
         // Cek apakah item ada di cart
-        $cartItem = Cart::where('user_id', Auth::id())
-            ->where('product_id', $productId)
+        $cartItem = Cart::where('user_id', $userId)
+            ->where('product_variant_id', $productId)
             ->first();
 
         if ($cartItem) {
@@ -133,8 +138,8 @@ class CartController extends Controller
             // Jika item tidak ditemukan di cart, dan newQuantity lebih dari 0, tambahkan ke cart
             if ($newQuantity > 0) {
                 Cart::create([
-                    'user_id' => Auth::id(),
-                    'product_id' => $productId,
+                    'user_id' => $userId,
+                    'product_variant_id' => $productId,
                     'quantity' => $newQuantity
                 ]);
                 return response()->json(['message' => 'Product added to cart with specified quantity']);
@@ -147,10 +152,10 @@ class CartController extends Controller
 
     public function removeFromCartDatabase(Request $request)
     {
-        $productId = $request->input('product_id');
-
-        $cartItem = Cart::where('user_id', Auth::id())
-            ->where('product_id', $productId)
+        $productId = $request->input('product_variant_id');
+        $userId = $request->input('user_id');
+        $cartItem = Cart::where('user_id', $userId)
+            ->where('product_variant_id', $productId)
             ->first();
 
         if ($cartItem) {

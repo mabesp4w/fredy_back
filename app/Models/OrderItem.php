@@ -11,10 +11,10 @@ class OrderItem extends Model
     /** @use HasFactory<\Database\Factories\OrderItemFactory> */
     use HasFactory, HasUuids;
 
-    // has one to product
-    public function product()
+    // has one to productVariant
+    public function productVariant()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 
     // belongsTo order

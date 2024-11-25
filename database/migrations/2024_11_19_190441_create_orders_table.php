@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('shipping_cost');
             $table->integer('total_price');
             $table->integer('total_payment');
-            $table->text('snap_token');
+            $table->text('snap_token')->nullable();
             $table->string('status'); // proses, dibayar, batal, selesai
             $table->timestamps();
         });

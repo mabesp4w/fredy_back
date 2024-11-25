@@ -11,9 +11,9 @@ class Cart extends Model
     /** @use HasFactory<\Database\Factories\CartFactory> */
     use HasFactory, HasUuids;
 
-    // belongsTo product
-    public function product()
+    // belongsTo productVariant
+    public function productVariant()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 }

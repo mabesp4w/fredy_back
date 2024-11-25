@@ -23,3 +23,27 @@ Route::group(['prefix' => 'shippingCosts'], function () {
     Route::get('/', [App\Http\Controllers\API\ShippingCostAPI::class, 'index'])->name('shippingCosts');
     Route::get('all', [App\Http\Controllers\API\ShippingCostAPI::class, 'all'])->name('shippingCosts.all');
 });
+
+// carts
+Route::group(['prefix' => 'carts'], function () {
+    Route::get('/', [App\Http\Controllers\API\CartAPI::class, 'getCartData'])->name('getCartData');
+    Route::post('addToCartSession', [App\Http\Controllers\API\CartAPI::class, 'addToCartSession'])->name('addToCartSession');
+    Route::post('removeFromCartSession', [App\Http\Controllers\API\CartAPI::class, 'removeFromCartSession'])->name('removeFromCartSession');
+    Route::post('copySessionCartToDatabase', [App\Http\Controllers\API\CartAPI::class, 'copySessionCartToDatabase'])->name('copySessionCartToDatabase');
+    Route::post('addToCartDatabase', [App\Http\Controllers\API\CartAPI::class, 'addToCartDatabase'])->name('addToCartDatabase');
+    Route::post('setCartQuantity', [App\Http\Controllers\API\CartAPI::class, 'setCartQuantity'])->name('setCartQuantity');
+    Route::post('removeFromCartDatabase', [App\Http\Controllers\API\CartAPI::class, 'removeFromCartDatabase'])->name('removeFromCartDatabase');
+});
+
+// payments
+Route::group(['prefix' => 'payment'], function () {
+    Route::post('/', [App\Http\Controllers\API\PaymentAPI::class, 'submitPayment'])->name('submitPayment');
+    Route::get('transactionStatus/{orderId}', [App\Http\Controllers\API\PaymentAPI::class, 'getTransactionStatus'])->name('getTransactionStatus');
+    Route::post('callback', [App\Http\Controllers\API\PaymentAPI::class, 'paymentCallback'])->name('paymentCallback');
+});
+
+// orders
+Route::group(['prefix' => 'orders'], function () {
+    Route::get('/', [App\Http\Controllers\API\OrderAPI::class, 'index'])->name('orders');
+    Route::get('all', [App\Http\Controllers\API\OrderAPI::class, 'all'])->name('orders.all');
+});
