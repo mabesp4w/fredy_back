@@ -93,6 +93,11 @@ class PaymentAPI extends Controller
                         'user_id' => $order->user_id,
                         'status' => 'dikemas'
                     ]);
+                    // reduce stock
+                    foreach ($order->orderItems as $item) {
+                        $productVariant = $item->productVariant;
+                        $productVariant->update(['stock' => $productVariant->stock - $item->quantity]);
+                    }
                 } elseif ($request->transaction_status == 'settlement') {
                     // Transaksi selesai
                     $order = Order::findOrFail($request->order_id);
@@ -102,6 +107,11 @@ class PaymentAPI extends Controller
                         'user_id' => $order->user_id,
                         'status' => 'dikemas'
                     ]);
+                    // reduce stock
+                    foreach ($order->orderItems as $item) {
+                        $productVariant = $item->productVariant;
+                        $productVariant->update(['stock' => $productVariant->stock - $item->quantity]);
+                    }
                 } elseif ($request->transaction_status == 'pending') {
                     // Transaksi menunggu pembayaran
                     Order::findOrFail($request->order_id)->update(['status' => 'tunggu']);

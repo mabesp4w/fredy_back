@@ -5,6 +5,7 @@ namespace App\Http\Controllers\CRUD;
 use App\Models\Order;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use App\Models\ShippingStatus;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CrudResource;
@@ -87,6 +88,8 @@ class ReviewController extends Controller
             }
             // update order
             $data = Order::where('id', $data_req['order_id'])->update(['status' => 'selesai']);
+            // update shipping status
+            ShippingStatus::where('order_id', $data_req['order_id'])->update(['status' => 'selesai']);
             DB::commit();
             return new CrudResource('success', 'Data Berhasil Disimpan', $data);
         } catch (\Throwable $th) {
